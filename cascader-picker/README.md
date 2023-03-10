@@ -2,7 +2,7 @@
 
 ### 介绍
 
-级联选择框，用于多层级数据的选择，典型场景为省市区选择。
+适用于移动端项目的级联选择框，用于多层级数据的选择，典型场景为省市区选择。
 
 ## 代码演示
 
@@ -107,6 +107,25 @@ export default {
 };
 ```
 
+### 自定义顶部标题与选项文字
+
+slot定义的title会覆盖prop定义的title。
+
+```html
+<cascader-picker
+  v-model="cascaderValue"
+  :visible.sync="show"
+  title="请选择所在地区"
+  :options="options"
+  @finish="onFinish"
+>
+  <em slot="title">自定义的顶部标题</em>
+  <template v-slot:option="{ option, selected }">
+    <em>{{ selected }} {{ option }}</em>
+  </template>
+</cascader-picker>
+```
+
 ## API
 
 ### Props
@@ -139,3 +158,10 @@ export default {
 | 方法名 | 说明 | 参数 |
 | ---- | ---- | ---- |
 | resetPicker | 重置为初始状态 | - |
+
+### Slots
+
+| 名称 | 说明 | 参数 |
+| ---- | ---- | ---- |
+| title | 自定义顶部标题 | - |
+| option | 自定义选项文字 | _{ option: Option, selected: boolean }_ |

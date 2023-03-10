@@ -9,7 +9,8 @@
     <transition name="cascader-box-slide-up">
       <div v-show="visible" class="cascader-picker__box">
         <div v-if="showHeader" class="cascader-picker__header">
-          <h3 class="cascader-picker__title">{{title}}</h3>
+          <h3 class="cascader-picker__title" v-if="$slots.title"><slot name="title" /></h3>
+          <h3 class="cascader-picker__title" v-else>{{title}}</h3>
           <span v-if="closeable" class="cascader-picker__cancel" @click="closePicker">✖</span>
         </div>
         <div class="cascader-picker__tab">
@@ -38,7 +39,10 @@
                 :class="formatOptionClass(sonItem)"
                 @click="onSelect(sonItem, parentIndex)"
               >
-                <span>{{sonItem[textKey]}}</span>
+                <template v-if="$scopedSlots.option">
+                  <slot name="option" :option="sonItem" :selected="checkOptionActive(sonItem)" />
+                </template>
+                <span v-else>{{sonItem[textKey]}}</span>
                 <i v-if="checkOptionActive(sonItem)">✔</i>
               </li>
             </ul>
