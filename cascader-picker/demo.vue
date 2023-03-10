@@ -11,6 +11,7 @@
       :options="cascaderOptions"
       :field-names="cascaderFieldNames"
       @finish="onCascaderPickerFinish"
+      @change="onCascaderPickerChange"
     />
   </div>
 </template>
@@ -24,10 +25,10 @@ export default {
   data() {
     return {
       showCascader: false,
-      // cascaderValue: 'xxxx',
+      cascaderValue: '',
       // cascaderValue: '1-1',
       // cascaderValue: '2-2-2',
-      cascaderValue: '3-2-3-2',
+      // cascaderValue: '3-2-3-2',
       cascaderOptions: [],
       cascaderFieldNames: {
         text: 'name',
@@ -41,12 +42,18 @@ export default {
       // this.$refs['refCascaderPicker'].resetPicker()
       this.showCascader = true
     },
-    onCascaderPickerFinish(selectedOptions) {
+    onCascaderPickerFinish({ value, selectedOptions, tabIndex }) {
+      console.log(value)
       console.log(selectedOptions.map(item => item[this.cascaderFieldNames.value]))
       console.log(selectedOptions.map(item => item[this.cascaderFieldNames.text]))
       console.log(selectedOptions)
       this.showCascader = false
     },
+    onCascaderPickerChange({ value, selectedOptions, tabIndex }) {
+      console.log(value)
+      console.log(selectedOptions)
+      console.log(tabIndex)
+    }
   },
   created() {
     this.cascaderOptions = new Array(6).fill(null).map((item,index) => {

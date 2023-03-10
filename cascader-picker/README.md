@@ -149,8 +149,9 @@ slot定义的title会覆盖prop定义的title。
 
 | 事件 | 说明 | 回调参数 |
 | ---- | ---- | ---- |
+| change | 选中项变化时触发 | `{ value, selectedOptions, tabIndex }` |
 | input | 全部选项选择完成后触发 | `最末级选中项的value值` |
-| finish | 全部选项选择完成后触发 | `selectedOptions` |
+| finish | 全部选项选择完成后触发 | `{ value, selectedOptions, tabIndex }` |
 | close | 点击关闭图标时触发 | - |
 
 ### Methods

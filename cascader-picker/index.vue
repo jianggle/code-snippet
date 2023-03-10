@@ -229,10 +229,16 @@ export default {
       if (!this.visible || tabIndex !== this.activeTab) return
       this.finishedFlag = false
       this.selectedOptions.splice(this.activeTab, this.selectedOptions.length, item)
+      const eventParams = {
+        value: item[this.valueKey],
+        tabIndex,
+        selectedOptions: this.selectedOptions,
+      };
+      this.$emit('change', eventParams)
       if (!(item[this.childrenKey] && item[this.childrenKey].length) || this.activeTab + 1 >= this.level) {
         this.finishedFlag = true
-        this.$emit('input', this.selectedOptions[this.selectedOptions.length - 1][this.valueKey])
-        this.$emit('finish', this.selectedOptions)
+        this.$emit('input', eventParams.value)
+        this.$emit('finish', eventParams)
         return
       }
       this.$refs['selectListRefs'].forEach((ele, index) => {
