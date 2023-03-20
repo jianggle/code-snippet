@@ -42,7 +42,7 @@ export default {
   },
   methods: {
     // 全部选项选择完毕后，会触发 finish 事件
-    onFinish(selectedOptions) {
+    onFinish({ value, selectedOptions, tabIndex }) {
       this.show = false;
       this.fieldValue = selectedOptions.map((option) => option.text).join('/');
     },
