@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Document</title>
+</head>
+<body>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+#demoChartEl {
+  width: 100%;
+  height: 320px;
+  background-color: #000;
+}
+</style>
+<div id="demoChartEl"></div>
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.2/echarts.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
+<script>
+function get3dBarOption({ chartTitle, barSetting, xData, yData }) {
+  // 构造图例数据
+  const legendData = yData.map(item => {
+    return {
+      name: item.name,
+      itemStyle: { color: item.headerColor }
+    }
+  });
+  // 构造辅助图形数据
+  yData.forEach(function(item, index) {
+    item.bottomGraphData = []
+    item.topGraphData = []
+    item.data.forEach(function(ele) {
+      if (ele) {
+        item.bottomGraphData.push(1);
+        item.topGraphData.push(ele);
+      } else {
+        item.bottomGraphData.push(0);
+        item.topGraphData.push({
+          value: 1,
+          itemStyle: {
+            normal: {
+              color: 'rgba(0,0,0,0)',
+            },
+          },
+        });
+      }
+    });
+  });
+  // 构造series数据
+  function formatSeriesData(data) {
+    const tempArr = [];
+    const firstOffset = (data.length - 1) * -1 * Decimal(0.5).add(Decimal(barSetting.barGap).div(Decimal(2)));
+    const barGap = Decimal(barSetting.barGap).mul(Decimal(100)) + '%';
+    const baseNum = Decimal(barSetting.barGap).add(Decimal(1)).toNumber();
+    data.forEach(function(item,index){
+      let bodyStyle = {
+        type: 'linear',
+        x: 0, x2: 1,
+        y: 0, y2: 0,
+        colorStops: [
+          { offset: 0, color: data[index].bodyColor[0], },
+          { offset: 0.5, color: data[index].bodyColor[0], },
+          { offset: 0.5, color: data[index].bodyColor[1], },
+          { offset: 1, color: data[index].bodyColor[1], },
+        ],
+      }
+      let curOffset = Decimal(firstOffset).add(Decimal(baseNum).mul(Decimal(index).add(Decimal(1)))).sub(Decimal(baseNum)).mul(Decimal(100)) + '%';
+      let curArr = [
+        // 中间图形
+        {
+          z: 3*(index+1) - 2,
+          name: data[index].name,
+          data: data[index].data,
+          type: 'bar',
+          barWidth: barSetting.barWidth,
+          barGap: barGap,
+          itemStyle: {
+            normal: {
+              color: bodyStyle,
+            },
+          },
+        },
+        // 底部图形
+        {
+          z: 3*(index+1) - 1,
+          name: data[index].name,
+          data: data[index].bottomGraphData,
+          type: 'pictorialBar',
+          symbol: 'diamond',
+          symbolPosition: 'start',
+          symbolSize: [barSetting.barWidth, barSetting.diamondHeight],
+          symbolOffset: [curOffset, '50%'],
+          itemStyle: {
+            normal: {
+              color: bodyStyle,
+            },
+          },
+          tooltip: {
+            show: false,
+          },
+        },
+        // 顶部图形
+        {
+          z: 3*(index+1),
+          name: data[index].name,
+          data: data[index].topGraphData,
+          type: 'pictorialBar',
+          symbol: 'diamond',
+          symbolPosition: 'end',
+          symbolSize: [barSetting.barWidth, barSetting.diamondHeight],
+          symbolOffset: [curOffset, '-50%'],
+          itemStyle: {
+            normal: {
+              color: data[index].headerColor,
+            },
+          },
+          tooltip: {
+            show: false,
+          },
+        },
+      ];
+      tempArr.push(...curArr)
+    });
+    return tempArr;
+  }
+
+  return {
+    title: {
+      text: chartTitle,
+      textStyle: {
+        color: '#fff',
+      },
+    },
+    legend: {
+      show: true,
+      align: 'left',
+      right: 0,
+      textStyle: {
+        color: '#fff',
+        fontSize: 14,
+      },
+      icon: 'roundRect',
+      itemWidth: 16,
+      itemHeight: 16,
+      data: legendData,
+      selectedMode: false,
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'line',
+      },
+      textStyle: {
+        fontWeight: 'bold',
+        fontSize: 14,
+      },
+    },
+    grid: {
+      left: '3%',
+      right: '3%',
+      bottom: '4%',
+      top: '20%',
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      axisPointer: {
+        type: 'shadow',
+      },
+      data: xData,
+      axisTick: {
+        show: false,
+      },
+      axisLabel: {
+        color: '#fff',
+        interval: 0,
+      },
+      axisLine: {
+        color: 'rgba(255,255,255, 0.47)',
+        lineStyle: {
+          color: 'rgba(255,255,255, 0.16)',
+        },
+      },
+    },
+    yAxis: [
+      {
+        type: 'value',
+        axisLabel: {
+          color: 'rgba(255,255,255, 0.47)',
+        },
+        axisTick: {
+          show: false,
+        },
+        splitLine: {
+          show: false,
+          lineStyle: {
+            color: 'rgba(114,124,140, 0.6)',
+          },
+        },
+        axisLine: {
+          show: false,
+          lineStyle: {
+            color: '#A4A8B0',
+          },
+        },
+      },
+    ],
+    series: formatSeriesData(yData),
+  };
+}
+
+const myChart = echarts.init(document.getElementById('demoChartEl'));
+const options = get3dBarOption({
+  chartTitle: 'xxx统计图表',
+  barSetting: {
+    barGap: 0.4,
+    barWidth: 15,
+    diamondHeight: 8,
+  },
+  xData: new Array(12).fill(null).map(function (item, index) {
+    return ('0' + (index + 1)).slice(-2);
+  }),
+  yData: [
+    {
+      name: '进口',
+      data: [50, 150, 360, 420, 200, 200, 700, 220, 100, 600, 700, 800],
+      headerColor: '#04D44E',
+      bodyColor: ['#038431', '#04C147'],
+    },
+    {
+      name: '出口',
+      data: new Array(12).fill(null).map(item => parseInt(Math.random()*1000)),
+      headerColor: '#00baff',
+      bodyColor: ['#00adf6', '#007bb1'],
+    },
+    {
+      name: '测试',
+      data: [80, 0, null, undefined, [], NaN, 800, '', 550, '400', 900, 200],
+      headerColor: '#ff960d',
+      bodyColor: ['#ffea00', '#ff960d'],
+    },
+  ]
+});
+console.log(options);
+myChart.setOption(options);
+</script>
+</body>
+</html>
