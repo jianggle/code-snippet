@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Document</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+#demoChartEl, #demo2ChartEl {
+  width: 100%;
+  height: 360px;
+  background-color: #000;
+}
+</style>
+</head>
+<body>
+<div id="demoChartEl"></div>
+<div id="demo2ChartEl"></div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.2/echarts.min.js"></script>
+<script>
+const xData = new Array(12).fill(null).map((item, index) => `${index + 1}月`);
+
+const yStackSum = [150, 166, 50, 0, 120, 80, 145, 76, 72, 100, 110, 120];
+const yChild1 = [70, 166, 0, undefined, 66, 15, 45, 42, 50, 40, 66, 81];
+const yChild2 = yStackSum.map((item, index) => {
+  return item - (yChild1[index]*1 || 0)
+})
+const ySumName = 'Sum';
+const yChild1Name = 'Child1';
+const yChild2Name = 'Child2';
+
+const colors = ['#E1B85E', '#58CE66']
+
+const yData = yStackSum.map((item, index) => {
+  let bfb = ((yChild1[index]*1||0)/(yStackSum[index]*1||1)).toFixed(4)*1 || 0;
+  return {
+    value: item,
+    itemStyle: {
+      color: {
+        type: 'linear',
+        x: 0, y: 0,
+        x2: 0, y2: 1,
+        colorStops: [
+          { offset: 0, color: colors[0] },
+          { offset: bfb, color: colors[0] },
+          { offset: bfb, color: colors[1] },
+          { offset: 1, color: colors[1] },
+        ],
+        global: false
+      }
+    }
+  }
+});
+
+const yMin = 0;
+const yMax = Math.ceil((Math.ceil(Math.max(...yStackSum))+1)/100)*100;
+
+const tooltipFormatter = (params) => {
+  const formatVal = (val, unit='小时') => {
+    return [undefined,null].includes(val) ? '-' : val + unit
+  }
+  const index = params[0].dataIndex;
+  return `
+    ${params[0].name}<br/>
+    ${ySumName}：${formatVal(yStackSum[index])}<br/>
+    ${yChild1Name}：${formatVal(yChild1[index])}<br/>
+    ${yChild2Name}：${formatVal(yChild2[index])}<br/>
+  `
+}
+
+const options = {
+  title: {
+    text: '单个柱子实现堆叠效果',
+    left: 'center',
+    top: '2%',
+    textStyle: {
+      color: '#eee',
+    }
+  },
+  legend: {
+    show: false,
+  },
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'line'
+    },
+    textStyle: {
+      fontWeight: 'bold',
+      fontSize: 14
+    },
+    formatter: tooltipFormatter,
+  },
+  grid: {
+    left: '3%',
+    right: '3%',
+    bottom: '4%',
+    top: '15%',
+    containLabel: true
+  },
+  xAxis: {
+    data: xData,
+    type: 'category',
+    axisPointer: {
+      type: 'shadow'
+    },
+    axisTick: {
+      show: false
+    },
+    axisLabel: {
+      fontSize: 12,
+      color: "#fff",
+      interval: 0,
+    },
+    axisLine: {
+      lineStyle: {
+        color: '#32AFFF'
+      }
+    }
+  },
+  yAxis: [
+    {
+      name: '(单位)',
+      nameTextStyle: {
+        color: '#c4c4c4',
+        fontSize: 12,
+      },
+      type: 'value',
+      axisTick: {
+        show: false
+      },
+      splitLine: {
+        show: true,
+        lineStyle: {
+          type: "dotted",
+          color: ["rgba(93, 192, 255, 0.5)"],
+        },
+      },
+      axisLine: {
+        show: false,
+      },
+      axisLabel: {
+        fontSize: 12,
+        color: "#fff",
+      },
+      min: yMin,
+      max: yMax,
+      splitNumber: 10,
+      interval: (yMax - yMin) / 10,
+    },
+  ],
+  series: [
+    {
+      z: 1,
+      data: yData,
+      name: ySumName,
+      type: 'bar',
+      barWidth: 13,
+      showBackground: true,
+      backgroundStyle: {
+        color: '#2C4162'
+      },
+    },
+    {
+      z: 2,
+      data: yData.map(item => item.value),
+      type: 'pictorialBar',
+      tooltip: { show: false },
+      barWidth: 13,
+      barGap: '-100%',
+      symbol: 'rect',
+      symbolRotate: '45',
+      symbolRepeat: 'true',
+      symbolMargin: 2.5,
+      symbolSize: [16, 1],
+      symbolRepeat: true,
+      symbolClip: true,
+      itemStyle: {
+        color: '#ffffff',
+        opacity: 1
+      },
+    },
+  ]
+}
+
+const myChart = echarts.init(document.getElementById('demoChartEl'));
+myChart.setOption(options);
+
+
+const demo2options = {
+  title: {
+    text: '多个柱子堆叠',
+    left: 'center',
+    top: '2%',
+    textStyle: {
+      color: '#eee',
+    }
+  },
+  legend: {
+    show: false,
+  },
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'line'
+    },
+    textStyle: {
+      fontWeight: 'bold',
+      fontSize: 14
+    },
+    formatter: tooltipFormatter,
+  },
+  grid: {
+    left: '3%',
+    right: '3%',
+    bottom: '4%',
+    top: '15%',
+    containLabel: true
+  },
+  xAxis: {
+    data: xData,
+    type: 'category',
+    axisPointer: {
+      type: 'shadow'
+    },
+    axisTick: {
+      show: false
+    },
+    axisLabel: {
+      fontSize: 12,
+      color: "#fff",
+      interval: 0,
+    },
+    axisLine: {
+      lineStyle: {
+        color: '#32AFFF'
+      }
+    }
+  },
+  yAxis: [
+    {
+      name: '(单位)',
+      nameTextStyle: {
+        color: '#c4c4c4',
+        fontSize: 12,
+      },
+      type: 'value',
+      axisTick: {
+        show: false
+      },
+      splitLine: {
+        show: true,
+        lineStyle: {
+          type: "dotted",
+          color: ["rgba(93, 192, 255, 0.5)"],
+        },
+      },
+      axisLine: {
+        show: false,
+      },
+      axisLabel: {
+        fontSize: 12,
+        color: "#fff",
+      },
+      min: yMin,
+      max: yMax,
+      splitNumber: 10,
+      interval: (yMax - yMin) / 10,
+    },
+  ],
+  series: [
+    {
+      z: 1,
+      data: yChild1,
+      name: yChild1Name,
+      type: 'bar',
+      barWidth: 13,
+      showBackground: true,
+      backgroundStyle: {
+        color: '#2C4162'
+      },
+      stack: 'sum',
+      itemStyle: {
+        color: colors[0],
+      },
+    },
+    {
+      z: 1,
+      data: yChild2,
+      name: yChild2Name,
+      type: 'bar',
+      barWidth: 13,
+      showBackground: true,
+      backgroundStyle: {
+        color: '#2C4162'
+      },
+      stack: 'sum',
+      itemStyle: {
+        color: colors[1],
+      },
+    },
+    {
+      z: 2,
+      data: yStackSum,
+      type: 'pictorialBar',
+      tooltip: { show: false },
+      barWidth: 13,
+      barGap: '-100%',
+      symbol: 'rect',
+      symbolRotate: '45',
+      symbolRepeat: 'true',
+      symbolMargin: 2.5,
+      symbolSize: [16, 1],
+      symbolRepeat: true,
+      symbolClip: true,
+      itemStyle: {
+        color: '#ffffff',
+        opacity: 1
+      },
+    },
+  ]
+}
+const demo2Chart = echarts.init(document.getElementById('demo2ChartEl'));
+demo2Chart.setOption(demo2options);
+</script>
+</body>
+</html>
