@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3d地球</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+#demoChartEl {
+  width: 100%;
+  height: 80vh;
+  background-color: #000;
+}
+</style>
+</head>
+<body>
+<div id="demoChartEl"></div>
+<h3>相关资料</h3>
+<ul>
+  <li><a target="_blank" href="https://echarts.apache.org/zh/option-gl.html#globe">ECharts地球组件文档</a></li>
+  <li><a target="_blank" href="https://echarts.apache.org/examples/zh/index.html#chart-type-globe">官方示例->ECharts 3D地球</a></li>
+  <li><a target="_blank" href="https://blog.csdn.net/m0_73117087/article/details/134324520">使用 React 和 ECharts 创建地球模拟扩散和飞线效果</a></li>
+</ul>
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.2/echarts.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts-gl/2.0.8/echarts-gl.min.js"></script>
+<script>
+const areaPointes = [
+  {
+    name: '杭州',
+    point: [120.12, 30.16],
+    itemStyleColor: '#ff9917',
+    labelText: '杭州'
+  },
+  {
+    name: '德国',
+    point: [13.402393, 52.518569, 0],
+    itemStyleColor: '#ff9917',
+    labelText: '德国'
+  },
+  {
+    name: '美国',
+    point: [-100.696295, 33.679979, 0],
+    itemStyleColor: '#ff9917',
+    labelText: '美国'
+  }
+];
+
+// 设置地理坐标映射
+let geoCoordMap = {
+  '杭州': [120.12, 30.16],
+  '美国': [-100.696295, 33.679979],
+  '德国': [13.402393, 52.518569],
+  '加拿大': [-102.646409, 59.994255]
+};
+
+const HZData = [
+  [{ name: '杭州' }, { name: '加拿大', value: 80 }],
+  [{ name: '杭州' }, { name: '美国', value: 100 }],
+  [{ name: '杭州' }, { name: '德国', value: 95 }]
+];
+
+let convertData = function (data) {
+  let res = [];
+  for (let i = 0; i < data.length; i++) {
+    let dataItem = data[i];
+    let fromCoord = geoCoordMap[dataItem[1].name];
+    let toCoord = geoCoordMap[dataItem[0].name];
+
+    if (fromCoord && toCoord) {
+      res.push([fromCoord, toCoord]);
+    }
+  }
+  return res;
+};
+
+const series = areaPointes.map((item) => {
+  return {
+    name: item.name, // 是否显示左上角图例
+    type: 'scatter3D',
+    coordinateSystem: 'globe',
+    blendMode: 'source-over',
+    symbol: 'circle',
+    animation: true,
+    symbolSize: 10, // 点位大小
+    itemStyle: {
+      color: item.itemStyleColor, // 各个点位的颜色设置
+      opacity: 1, // 透明度
+      borderWidth: 0, // 边框宽度
+      borderColor: 'rgba(255,255,255,0.8)', //rgba(180, 31, 107, 0.8)
+      shadowBlur: 20, // 设置发光效果的模糊程度
+      shadowColor: 'rgba(255, 153, 23, 0.8)', // 设置发光的颜色
+      emphasis: {
+        // 强调显示效果
+        label: {
+          show: true
+        },
+        itemStyle: {
+          color: '#fff',
+          borderColor: 'red',
+          borderWidth: 20
+        }
+      }
+    },
+    animationDelay: 1000, // 动画延迟1秒播放
+    label: {
+      show: false, // 是否显示字体
+      position: 'left', // 字体位置。top、left、right、bottom
+      formatter: item.labelText, // 具体显示的值
+      textStyle: {
+        color: '#fff', // 字体颜色
+        borderWidth: 0, // 字体边框宽度
+        borderColor: '#fff', // 字体边框颜色
+        fontFamily: 'sans-serif', // 字体格式
+        fontSize: 18, // 字体大小
+        fontWeight: 700 // 字体加粗
+      }
+    },
+    data: [item.point] // 数据来源
+  };
+});
+
+// 设置飞线
+const lineSeries = [];
+[['杭州', HZData]].forEach(function (item) {
+  lineSeries.push({
+    type: 'lines3D',
+    effect: {
+      show: true,
+      period: 3,
+      trailLength: 0.1
+    },
+    lineStyle: {
+      //航线的视图效果
+      color: '#ff9917',
+      width: 2,
+      opacity: 0.7
+    },
+    data: convertData(item[1])
+  });
+});
+// 设置扩散坐标样式
+const middleSeries = series.map((item) => {
+  return {
+    ...item,
+    symbolSize: 20,
+    itemStyle: {
+      ...item.itemStyle,
+      opacity: 0.4 // 透明度
+    }
+  };
+});
+
+const options = {
+  backgroundColor: 'transparent',
+  //地球配置
+  globe: {
+    //地球的半径。单位相对于三维空间
+    globeRadius: 56,
+    // 基础图片
+    baseTexture: './earth_skin_blue.jpeg',
+    // heightTexture: '/src/assets/images/widget-images/lines.png',
+    // 地球顶点位移的大小。
+    displacementScale: 0.1,
+    // 地球中三维图形的着色效果
+    // 'color' 只显示颜色，不受光照等其它因素的影响。
+    // 'lambert' 通过经典的 lambert 着色表现光照带来的明暗。
+    // 'realistic' 真实感渲染
+    shading: 'lambert',
+    //环境贴图。支持纯色、渐变色、全景贴图的 url
+    // environment: '/src/assets/images/widget-images/earth-background.jpg',
+    // displacementTexture: '/src/assets/images/widget-images/lines.png',
+    //roughness属性用于表示材质的粗糙度，0为完全光滑，1完全粗糙，中间的值则是介于这两者之间
+    realisticMaterial: {
+      roughness: 0.1
+    },
+    atmosphere: {
+      show: false // 大气层
+    },
+    light: {
+      // 场景主光源的设置
+      main: {
+        // 主光源的颜色
+        color: '#fff', // 光照颜色
+        intensity: 0.8, // 光照强度
+        shadow: true, // 是否显示阴影
+        alpha: 40, // 主光源绕 x 轴，即上下旋转的角度
+        beta: -30 //主光源绕 y 轴，即左右旋转的角度。
+      },
+      // 全局的环境光设置。
+      ambient: {
+        // /环境光的强度
+        intensity: 1
+      }
+    },
+    viewControl: {
+      center: [0, 15, 0],
+      autoRotate: true, // 是否开启视角绕物体的自动旋转查看
+      autoRotateSpeed: 2, //物体自转的速度,单位为角度 / 秒，默认为10 ，也就是36秒转一圈。
+      autoRotateAfterStill: 2, // 在鼠标静止操作后恢复自动旋转的时间间隔,默认 3s
+      rotateSensitivity: 2, // 旋转操作的灵敏度，值越大越灵敏.设置为0后无法旋转。[1, 0]只能横向旋转.[0, 1]只能纵向旋转
+      targetCoord: [116.46, 15], // 定位到北京
+      zoomSensitivity: 0 // 禁止缩放
+    }
+  },
+  series: [
+    ...series,
+    ...middleSeries,
+    ...lineSeries,
+  ]
+}
+
+const myChart = echarts.init(document.getElementById('demoChartEl'));
+myChart.setOption(options);
+
+function handleResize() {
+  // 重新适配大小并开启过渡动画
+  myChart && myChart.resize({
+    animation: { duration: 300 }
+  })
+}
+
+window.addEventListener('resize', handleResize)
+// window.removeEventListener('resize', handleResize)
+</script>
+</body>
+</html>
