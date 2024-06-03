@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>路书-实现marker沿路线运动</title>
+<link rel="icon" href="data:,"/>
+<script type="text/javascript" src="./assets/js/jquery-3.4.1.min.js"></script>
+<script type="text/javascript" src="./bmap/map_api_v3.0.js"></script>
+<style type="text/css">
+html{height:100%}
+body{height:100%;margin:0;padding:0}
+#container{height:100%}
+</style>
+</head>
+
+<body>
+  <div id="container"></div>
+</body>
+<script type="text/javascript">
+const map = new BMap.Map("container");
+map.centerAndZoom(new BMap.Point(104.065482, 30.511052), 19);
+map.addControl(new BMap.MapTypeControl({
+  mapTypes: [
+    BMAP_NORMAL_MAP,
+    BMAP_HYBRID_MAP
+  ]
+}));
+map.addControl(new BMap.NavigationControl({
+  type: BMAP_NAVIGATION_CONTROL_ZOOM,
+  anchor: BMAP_ANCHOR_BOTTOM_RIGHT,
+}));
+map.enableScrollWheelZoom(true);
+
+const myPath = [
+  {lng:104.065482, lat:30.511052 },
+  {lng:104.065688, lat:30.511211},
+  {lng:104.064943, lat:30.511717},
+  {lng:104.064116, lat:30.512277},
+  {lng:104.063011, lat:30.51295},
+  {lng:104.063016, lat:30.513008},
+  {lng:104.062903, lat:30.513074},
+  {lng:104.063231, lat:30.513486},
+  {lng: 104.06322, lat: 30.513466},
+  {lng: 104.063907, lat: 30.514287},
+  {lng: 104.064258, lat: 30.514719},
+  {lng: 104.064545, lat:30.515065}
+]
+const myPathPoints = []
+myPath.forEach(item => {
+  myPathPoints.push(new BMap.Point(item.lng, item.lat))
+})
+const myPathStartPoint = myPathPoints[0]
+const myPathEndPoint = myPathPoints[myPathPoints.length - 1]
+
+const iconStart = new BMap.Icon('./assets/images/marker_start.png', new BMap.Size(36, 56));
+iconStart.setImageSize(new BMap.Size(36, 56));
+const iconEnd = new BMap.Icon('./assets/images/marker_end.png', new BMap.Size(36, 56));
+iconEnd.setImageSize(new BMap.Size(36, 56));
+
+const myPathStartMarker = new BMap.Marker(myPathStartPoint, { icon: iconStart });
+const myPathEndMarker = new BMap.Marker(myPathEndPoint, { icon: iconEnd });
+
+// 创建折线
+const polyline = new BMap.Polyline(myPathPoints, {
+  strokeStyle: 'solid', // 折线样式，还支持 'dashed'
+  strokeColor: 'blue',
+  strokeWeight: 5,
+  strokeOpacity: 0.9
+});
+
+map.addOverlay(myPathStartMarker); // 添加起点
+map.addOverlay(myPathEndMarker); // 添加终点
+map.addOverlay(polyline); // 增加路径折线
+map.setViewport(myPathPoints); // 调整视口以展示全部路径
+
+function startLushu() {
+  // 小车图标
+  // const fly = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAAaCAYAAAD43n+tAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2hpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo0QkJENUI1QjFBMjA2ODExODIyQURGMURFN0RDNjk1MSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpERkI3OTVGQTAwMjgxMUU0ODcwNjg0ODkyQzg3NTc2QSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpERkI3OTVGOTAwMjgxMUU0ODcwNjg0ODkyQzg3NTc2QSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M2IChNYWNpbnRvc2gpIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RUVEQUNGOUYxMDIwNjgxMTgyMkFFRjI1QjkzM0FFMzUiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6NEJCRDVCNUIxQTIwNjgxMTgyMkFERjFERTdEQzY5NTEiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz65KH61AAAEPklEQVR42sxYTWwbRRT+1rteO/E63tjBbps0JdAfaoGgRK3U5kcCCQHtAVGpKL1wQDlUHPgR4hJVQaQgIS4gpEoc6AUhhQMgegEEB0QSqChNOVRKQglN0rhEdmrHsWPHP2ubNxvbmO1uYtde0id9mvF43s5+O9+8eTNcoVBAI+31i1d12z947vE72hxnPmJFkDBEuJD4+JW6x+e6L1yHGdbnib9DxauMy3jYOWzUb/ryt+yLpg8eedZe75hXXtoHC8yzNwhSkdRWZmvUoMIm/7kJLxJOEA4RPLU8mGalVG0hGOqaZqZUrVb7ccKXvbsdb5/t8c6zhpGJEH4JJAwl5yC8RXiZ1dkaC0eXEY2vIJfP4f8w3sLD5ZTRJnvBcZxun+9PPxB2N/EnqTp2O6ngmc/nVMlpZ6iD8A3hkVLD7ZUQIrGwWhdtdjhkN5pcbvCC9a5f2GrhINus6HLa0UkovfJaKoXpwBImZv5EZDVM7RzaWr1Gj2GK+ZrwGOFmqbFyDTGN/FBJhtnqWlT9So4WF2TfLkgeX11kmGXzBSyvZ3A5FMP4UhRKfkNtkt2Ow3u7cHT/g+WxjWxkIohQUmkNr+feO0eS0yP0PuEhrSOTWbPkhEAkrE1Sw+UVTGbwKxGrtIc7O9RSySmGfhOLCRwnmT09euPUz4FEu5bQHsKgrjxEEYJVRG51GRaeN2XN/J1I4xahZJLdVmtge15LaMAo4rF1o07/6LumBoKFeKoe92Nldv1zoxjrOv2EYcQprpf07O+mEgqnskYbtHFWMDW2Ee/9/X7tDPmP3vxK36kUNk0O2alcvnanZGwDQLt2Y/XgHrWKDfoO6/+3j1NLSLjUeXLbX35/q4jZaAb5QnWSw1y5j6iVXGTL0Sy86YRkuwUH3CJ4rmbXctwXKCCw8hphh15PlvqwdWTbe8hUMs2CBQuxLGUOVhz0iFVJrluU1XIy7FzSSo5lCE/pOeWUrLoPuQaGTCW0o1mEr1nAYlzBTqk6NUy2lxPbaa3kPmUxQ88pk97YH3jZazIhG2YiGUgih1g6D5tQk8THtITYqfGcbt6VyUDJZoqR25zQvcthQzshkytgdiWLQCyFwb5HN/Wh4wO+G+hiUI51OL4wyuUu6qXyybU4FJJedj3RcDI+ktoRb8t/2n6amcf5H69C4I2Pa8O9PrSRRAmfDfd6A3qE2M72AuF8pWOLJKuBIRFbRTR4C2vhIPKKUhcJdny4r0nEYSLSt1NWf6ubazaL32bncOn6X+pvlyRv9agbhDeruVN4kmXohB5GZpnORDFK5e+lAx5Jbn6ox3uC57ipkfEgKONWD3iGlyR/zE/hwP1+FqtPFQn6i2em7TZ2+BktfvCI9pJkszsFRoplpHeVlQ5272a3Pq8RPvxkcvGsUb98aEHNCyzePYbbKX3Y7b/GqtYafY3FNfqisRYz46LxHwEGACtFax5E0QyTAAAAAElFTkSuQmCC';
+  // 飞机图标
+  const fly = 'data:image/png;base64,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';
+  const lushu = new BMapLib.LuShu(map, polyline.getPath(), {
+    icon: new BMap.Icon(fly, new BMap.Size(48, 48), { anchor: new BMap.Size(24, 24) }),
+    speed: 40,
+    enableRotation: true,
+    autoView: true,
+  });
+  lushu.start()
+}
+startLushu();
+</script>
+</html>

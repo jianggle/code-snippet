@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>百度地图v3离线版</title>
+<link rel="icon" href="data:,"/>
+<script type="text/javascript" src="./assets/js/jquery-3.4.1.min.js"></script>
+<script type="text/javascript" src="./bmap/map_api_v3.0.js"></script>
+<style type="text/css">
+html{height:100%}
+body{height:100%;margin:0;padding:0}
+#container{height:100%}
+</style>
+</head>
+
+<body>
+  <div id="container"></div>
+</body>
+<script type="text/javascript">
+const map = new BMap.Map("container");
+map.centerAndZoom(new BMap.Point(104.065482, 30.511052), 19)
+map.addControl(new BMap.MapTypeControl({
+  mapTypes: [
+    BMAP_NORMAL_MAP,
+    BMAP_HYBRID_MAP
+  ]
+}))
+map.addControl(new BMap.NavigationControl({
+  type: BMAP_NAVIGATION_CONTROL_ZOOM,
+  anchor: BMAP_ANCHOR_BOTTOM_RIGHT,
+}))
+map.enableScrollWheelZoom(true)
+
+// 单击获取点击的经纬度
+map.addEventListener("click", function(e) {
+  console.log({lng:e.point.lng, lat:e.point.lat})
+})
+
+// 默认打点
+const myPoint1 = new BMap.Point(104.065482, 30.511052)
+const myMarker1 = new BMap.Marker(myPoint1, { title: "打点示例" })
+map.addOverlay(myMarker1)
+
+// 自定义图标打点
+const myPoint2 = new BMap.Point(104.064545, 30.515065)
+const myIcon = new BMap.Icon('./assets/images/car2.png', new BMap.Size(48, 48))
+myIcon.setImageSize(new BMap.Size(48, 48))
+const myMarker2 = new BMap.Marker(myPoint2, { icon: myIcon })
+map.addOverlay(myMarker2)
+
+// 调整视口以展示全部覆盖物
+map.setViewport([myPoint1, myPoint2])
+
+// window.addEventListener('resize', function() {
+//   console.log('xxxxxxxxxxxxxxx')
+// })
+
+// const objResizeObserver = new ResizeObserver(function (entries) {
+//   // console.log(entries[0].contentRect)
+//   map.setViewport(myPathPoints);
+// });
+// objResizeObserver.observe(document.getElementById('container'));
+</script>
+</html>

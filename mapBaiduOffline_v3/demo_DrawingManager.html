@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鼠标绘制编辑</title>
+<link rel="icon" href="data:,"/>
+<script type="text/javascript" src="./assets/js/jquery-3.4.1.min.js"></script>
+<script type="text/javascript" src="./bmap/map_api_v3.0.js"></script>
+<script type="text/javascript" src="./bmap/library/DrawingManager/DrawingManager_min.js"></script>
+<link rel="stylesheet" href="./bmap/library/DrawingManager/DrawingManager_min.css" />
+<style type="text/css">
+html{height:100%}
+body{height:100%;margin:0;padding:0}
+.map-box{height:50%}
+</style>
+</head>
+
+<body>
+  <div class="map-box" id="mapBox">
+    <div id="mapEl" style="width: 100%;height: 100%;"></div>
+  </div>
+  <div style="text-align:center;margin-top:10px;">
+    <button onclick="startDraw()">绘制线路</button>
+    <button onclick="toggleEdit(!isEdit)" id="toggleBtn">编辑线路</button>
+    <button onclick="clearMap()">清除</button>
+  </div>
+</body>
+<script type="text/javascript">
+const map = new BMap.Map("mapEl");
+map.centerAndZoom(new BMap.Point(104.065482, 30.511052), 19);
+map.addControl(new BMap.MapTypeControl({
+  mapTypes: [
+    BMAP_NORMAL_MAP,
+    BMAP_HYBRID_MAP
+  ]
+}));
+map.addControl(new BMap.NavigationControl({
+  type: BMAP_NAVIGATION_CONTROL_ZOOM,
+  anchor: BMAP_ANCHOR_BOTTOM_RIGHT,
+}));
+map.enableScrollWheelZoom(true);
+
+let pathLnglats = [
+  {lng:104.065482, lat:30.511052 },
+  {lng:104.065688, lat:30.511211},
+  {lng:104.064943, lat:30.511717},
+  {lng:104.064116, lat:30.512277},
+  {lng:104.063011, lat:30.51295},
+  {lng:104.063016, lat:30.513008},
+  {lng:104.062903, lat:30.513074},
+  {lng:104.063231, lat:30.513486},
+  {lng: 104.06322, lat: 30.513466},
+  {lng: 104.063907, lat: 30.514287},
+  {lng: 104.064258, lat: 30.514719},
+  {lng: 104.064545, lat: 30.515065}
+]
+
+let isEdit = false;
+let polyline = null;
+
+function addLine(paths, isPreview = false) {
+  const myPathPoints = []
+  paths.forEach(item => {
+    myPathPoints.push(new BMap.Point(item.lng, item.lat))
+  })
+
+  if (isPreview) {
+    const myPathStartPoint = myPathPoints[0]
+    const myPathEndPoint = myPathPoints[myPathPoints.length - 1]
+
+    const iconStart = new BMap.Icon('./assets/images/marker_start.png', new BMap.Size(36, 56));
+    iconStart.setImageSize(new BMap.Size(36, 56));
+    const iconEnd = new BMap.Icon('./assets/images/marker_end.png', new BMap.Size(36, 56));
+    iconEnd.setImageSize(new BMap.Size(36, 56));
+
+    const myPathStartMarker = new BMap.Marker(myPathStartPoint, { icon: iconStart });
+    const myPathEndMarker = new BMap.Marker(myPathEndPoint, { icon: iconEnd });
+
+    map.addOverlay(myPathStartMarker); // 添加起点
+    map.addOverlay(myPathEndMarker); // 添加终点
+  }
+
+  // 创建折线
+  polyline = new BMap.Polyline(myPathPoints, {
+    strokeStyle: 'solid', // 折线样式，还支持 'dashed'
+    strokeColor: 'blue',
+    strokeWeight: 5,
+    strokeOpacity: 0.9
+  });
+
+  map.addOverlay(polyline); // 增加路径折线
+  map.setViewport(myPathPoints); // 调整视口以展示全部路径
+}
+addLine(pathLnglats)
+
+function toggleEdit(isOpen) {
+  if (!polyline) return;
+  if (isOpen) {
+    polyline.enableEditing()
+  } else {
+    polyline.disableEditing()
+    console.log(polyline.getPath())
+  }
+  isEdit = isOpen
+  $('#toggleBtn').text(isEdit ? '结束路线' : '编辑路线')
+}
+
+function clearMap() {
+  if (isEdit) {
+    return alert('请关闭编辑路线!')
+  }
+  isEdit = false
+  polyline = null
+  map.clearOverlays()
+}
+
+function startDraw() {
+  clearMap()
+  const drawingManager = new BMapLib.DrawingManager(map, {
+    isOpen: true,
+    polylineOptions: {
+      strokeStyle: 'solid',
+      strokeColor: '#28F',
+      strokeWeight: 5,
+      strokeOpacity: 1,
+    },
+  })
+  drawingManager.setDrawingMode(BMAP_DRAWING_POLYLINE)
+  drawingManager.addEventListener('polylinecomplete', function (e, overlay) {
+    const pointList = overlay.getPath().map(item => {
+      return {
+        lng: item.lng.toString(),
+        lat: item.lat.toString(),
+      }
+    })
+    map.clearOverlays()
+    addLine(pointList)
+    toggleEdit(true)
+  })
+}
+</script>
+</html>
